@@ -5,11 +5,16 @@ def manhattan(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
 def astar(grid, start, goal):
-    #se não há caminho a seguir retorna o início
+    #se estamos no objetivo retorna a posição atual e o custo que seria 0
     if start == goal:
         return [start], 0
-    R, C = len(grid), len(grid[0])
+
+    R = len(grid) #guardamos a quantidade de linhas
+    
+    C = len(grid[0]) #guardamos a quantidade de colunas
+
     openh = []
+
     heappush(openh, (manhattan(start, goal), 0, start))
     came = {start: None}
     g = {start: 0}
