@@ -1,11 +1,11 @@
 from heapq import heappush, heappop
 
-# ---------- A* mínimo ----------
-def manhattan(a, b):  # heurística
+#cáluclo da heurística, quantas casas anda na vertical e na horizontal de um ponto a outro
+def manhattan(a, b):
     return abs(a[0]-b[0]) + abs(a[1]-b[1])
 
 def astar(grid, start, goal):
-    """Retorna (path, dist) ou (None, inf) se não há caminho."""
+    #se não há caminho a seguir retorna o início
     if start == goal:
         return [start], 0
     R, C = len(grid), len(grid[0])
