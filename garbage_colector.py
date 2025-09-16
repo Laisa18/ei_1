@@ -13,62 +13,64 @@ def astar(grid, start, goal):
     
     C = len(grid[0]) #guardamos a quantidade de colunas
 
-    openh = []
+    openh = [] #lista que guarda as posições a serem avaliadas (lista aberta)
 
     heappush(openh, (manhattan(start, goal), 0, start))
-    came = {start: None}
-    g = {start: 0}
-    while openh:
-        f, gc, cur = heappop(openh)
+
+
+    came = {start: None} #guardamos o caminho de onde viemos em um dic
+
+    g = {start: 0} #dict com o melhor custo para cada posição 
+
+    while openh: #enquanto houver canditados para serem avaliados
+
+        f, gc, cur = heappop(openh) #tira da lista o valor menos prioridade f, o custo ate agora, e posição atual
         if cur == goal:
-            # reconstrói caminho
+            # reconstrói caminho se chegou o destino
             path = []
             p = cur
             while p is not None:
                 path.append(p)
                 p = came[p]
             return path[::-1], g[cur]
+        #se não encontriu abrimos o elemento atual
         x, y = cur
-        for nx, ny in [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]:
-            if 0 <= nx < R and 0 <= ny < C and grid[nx][ny] == 0:
-                ng = gc + 1
-                if ng < g.get((nx,ny), 10**9):
+        for nx, ny in [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]: #gera os vizinhos (expande a partir do atual)
+            if 0 <= nx < R and 0 <= ny < C and grid[nx][ny] == 0: #testes para considerar vizinho dentro do grid ou livre pra avançar
+                ng = gc + 1 #custo acumulado do atual mais 1 (cada passo custa 1)
+                if ng < g.get((nx,ny), 10**9): #pega o menor custo conhecido do vizinho, se não soubermos usa um valor padrão alto
                     g[(nx,ny)] = ng
                     came[(nx,ny)] = cur
-                    heappush(openh, (ng + manhattan((nx,ny), goal), ng, (nx,ny)))
+                    heappush(openh, (ng + manhattan((nx,ny), goal), ng, (nx,ny))) #se ng for menor atualizamos
     return None, float("inf")
 
+#como temos mais de um possível destino aplicamos a seguinte função:
+#aplicação do astar para todos os caminhos
 def nearest_by_astar(grid, start, targets):
-    """Escolhe o alvo alcançável com menor custo A* a partir de start."""
+    
     best = (None, None, float("inf"))
     for t in targets:
-        p, d = astar(grid, start, t)
-        if p is not None and d < best[2]:
+        p, d = astar(grid, start, t) #aplica o astar para cada target, pega o caminho e distância
+        if p is not None and d < best[2]: #compara com os próximos targets
             best = (t, p, d)
-    return best  # (alvo, caminho, distancia)
+    return best  # (alvo, caminho, distancia) escolhe o melhor considerando todos os alvos possíveis
 
-# ---------- Planejamento super simples ----------
+
 def route_collect(grid, start, bins, bays, capacity):
-    """
-    bins: dict {pos: quantidade}
-    bays: lista de pos
-    Estratégia:
-      - enquanto houver bins:
-          - se couber, vá ao coletor mais próximo e colete
-          - senão, vá à baia mais próxima e esvazie
-      - no fim, volta à baia
-    """
+    
     pos = start
     carga = 0
     caminho_total = [start]
     restante = bins.copy()
 
-    def goto(pos_atual, alvo):
+    #aplica o a* para retornar o caminho que falta e a distancia
+    def go_to(pos_atual, alvo):
         p, d = astar(grid, pos_atual, alvo)
         if p is None:
             raise RuntimeError(f"Sem caminho de {pos_atual} até {alvo}.")
         return p[1:], d  # sem repetir célula inicial
 
+    #enquanto ainda houver bins para recolher
     while restante:
         # escolher coletor mais próximo
         alvo, pbin, _ = nearest_by_astar(grid, pos, list(restante.keys()))
